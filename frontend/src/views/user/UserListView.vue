@@ -19,6 +19,7 @@ const users = ref([])
 onMounted(async () => {
   try {
     const res = await axios.get('http://localhost:8000/api/users')
+    // const res = await axios.get('/api/users')  // ✅ 关键修改
     users.value = res.data
   } catch (error) {
     alert('获取用户列表失败')

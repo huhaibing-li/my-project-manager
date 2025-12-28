@@ -1,24 +1,49 @@
+<!-- src/views/auth/LoginView.vue -->
 <template>
   <div class="login-container">
     <el-card class="login-card">
-      <h2 class="title">项目管理系统</h2>
-      <el-form @submit.prevent="handleLogin">
+      <div slot="header" class="login-header">
+        <h2>项目管理系统</h2>
+      </div>
+
+      <el-form
+        ref="loginFormRef"
+        :model="loginForm"
+        :rules="loginRules"
+        label-width="0"
+        @submit.prevent
+      >
+        <el-form-item prop="username">
+          <el-input
+            v-model="loginForm.username"
+            placeholder="用户名"
+            prefix-icon="User"
+          />
+        </el-form-item>
+
+        <el-form-item prop="password">
+          <el-input
+            v-model="loginForm.password"
+            type="password"
+            placeholder="密码"
+            prefix-icon="Lock"
+            show-password
+          />
+        </el-form-item>
+
         <el-form-item>
-          <el-input v-model="username" placeholder="用户名" />
+          <el-button
+            type="primary"
+            style="width: 100%"
+            :loading="loading"
+            @click="handleLogin"
+          >
+            登录
+          </el-button>
         </el-form-item>
-        <el-form-item>
-          <el-input v-model="password" type="password" placeholder="密码" />
-        </el-form-item>
-        <el-form-item label="验证码">
-          <div style="display:flex;gap:10px;align-items:center">
-            <el-input v-model="captchaInput" placeholder="请输入验证码" style="width:120px" />
-            <img :src="'data:image/png;base64,' + captchaImage" @click="loadCaptcha" style="cursor:pointer" />
-          </div>
-        </el-form-item>
-        <el-button type="primary" native-type="submit" style="width:100%">登录</el-button>
-        <div style="margin-top:10px;text-align:center">
-          <el-link type="primary" @click="$router.push('/register')">注册账号</el-link> |
-          <el-link type="primary" @click="$router.push('/reset-password')">忘记密码</el-link>
+
+        <div class="links">
+          <router-link to="/register">没有账号？去注册</router-link>
         </div>
       </el-form>
     </el-card>
@@ -26,56 +51,85 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { getCaptcha } from '@/api/auth'
+import { ElMessage } from 'element-plus'
+import { login } from '@/api/auth'
 
-// ✅ 关键修复：移除硬编码初始值！
-const username = ref('')  // ✅ 保持为空
-const password = ref('')  // ✅ 保持为空
-const captchaInput = ref('')
-const captchaImage = ref('')
-const captchaId = ref('')
 const router = useRouter()
-const authStore = useAuthStore()
+const loginFormRef = ref(null)
+const loading = ref(false)
 
-const loadCaptcha = async () => {
-  const res = await getCaptcha()
-  captchaImage.value = res.data.image
-  captchaId.value = res.data.captcha_id
-}
-
-onMounted(() => {
-  loadCaptcha()
+const loginForm = ref({
+  username: 'admin',
+  password: 'admin123'
 })
 
+const loginRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+}
+
 const handleLogin = async () => {
-  try {
-    // ✅ 用户输入的值会正确发送
-    await authStore.login(username.value, password.value, captchaId.value, captchaInput.value)
-    router.push('/projects')
-  } catch (error) {
-    alert('登录失败')
-    loadCaptcha()
-  }
+  await loginFormRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    // loading.value = true
+    try {
+      // const res = await login(loginForm.value.username, loginForm.value.password)
+      // const { access_token } = res.data
+
+      // localStorage.setItem('access_token', access_token)
+      ElMessage.success('登录成功！')
+
+      // 👇 新增：立即获取用户信息并存储
+      // const userRes = await getCurrentUser()
+      // localStorage.setItem('user_info', JSON.stringify(userRes.data)) // 存储完整用户信息
+      // 跳转首页（或重定向）
+      // const redirect = router.currentRoute.value.query.redirect || '/projects'
+      console.log('router',router)
+      router.push('/projects')
+    } catch (error) {
+      console.error('登录失败:', error)
+      let msg = '用户名或密码错误'
+      if (error.response?.status === 422) {
+        msg = '输入格式不正确'
+      }
+      ElMessage.error(msg)
+    } finally {
+      loading.value = false
+    }
+  })
 }
 </script>
 
 <style scoped>
 .login-container {
-  width: 100vw;
-  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f0f2f5;
+  min-height: 100vh;
+  background-color: #f5f7fa;
 }
+
 .login-card {
   width: 400px;
+  padding: 30px;
 }
-.title {
+
+.login-header h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  color: #303133;
+}
+
+.links {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.links a {
+  color: #409eff;
+  text-decoration: none;
 }
 </style>
