@@ -1,25 +1,43 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
+
+// 公共页面（无布局）
 import LoginView from '@/views/login/LoginView.vue'
 import RegisterView from '@/views/login/RegisterView.vue'
 import ResetPasswordView from '@/views/login/ResetPassword.vue'
-import ProjectListView from '@/views/projects/ProjectListView.vue'
-import ProjectCreateView from '@/views/projects/ProjectCreateView.vue'
-import ProjectEditView from '@/views/projects/ProjectEditView.vue'
-import ProjectDetailView from '@/views/projects/ProjectDetailView.vue'
-import UserListView from '@/views/user/UserListView.vue'
 
+// 布局组件
+const MainLayout = () => import('@/layouts/MainLayout.vue')
+
+// 需要布局的页面
+const ProjectListView = () => import('@/views/projects/ProjectListView.vue')
+const ProjectCreateView = () => import('@/views/projects/ProjectCreateView.vue')
+const ProjectEditView = () => import('@/views/projects/ProjectEditView.vue')
+const ProjectDetailView = () => import('@/views/projects/ProjectDetailView.vue')
+const UserListView = () => import('@/views/user/UserListView.vue')
 
 const routes = [
+  // 公开路由（无布局）
   { path: '/login', component: LoginView },
   { path: '/register', component: RegisterView },
   { path: '/reset-password', component: ResetPasswordView },
-  // { path: '/', redirect: '/projects' },
-  { path: '/projects', component: ProjectListView },
-  { path: '/projects/new', component: ProjectCreateView }, // 👈 新增这一行
-  { path: '/projects/edit/:id', component: ProjectEditView },  
-  { path: '/projects/:id', component: ProjectDetailView, props: true },
-  // { path: '/projects/edit/:id', component: ProjectEditView },
-  { path: '/users', component: UserListView, meta: { requiresAdmin: true } }
+
+  // 受保护路由（使用 MainLayout）
+  {
+    path: '/',
+    component: MainLayout,
+    children: [
+      { path: '', redirect: '/projects' },
+      { path: 'projects', component: ProjectListView },
+      { path: 'projects/new', component: ProjectCreateView },
+      { path: 'projects/edit/:id', component: ProjectEditView },
+      { path: 'projects/:id', component: ProjectDetailView, props: true },
+      { path: 'users', component: UserListView, meta: { requiresAdmin: true } }
+    ]
+  },
+
+  // 404
+  { path: '/:pathMatch(.*)*', redirect: '/projects' }
 ]
 
 const router = createRouter({
@@ -27,39 +45,31 @@ const router = createRouter({
   routes
 })
 
-
+// 路由守卫
 router.beforeEach((to) => {
-  // const token = localStorage.getItem('access_token') // ✅ 改为 'access_token'
+  // const token = localStorage.getItem('access_token')
   // const publicPaths = ['/login', '/register', '/reset-password']
 
-  // // 1. 未登录用户只能访问公开页面
   // if (!publicPaths.includes(to.path) && !token) {
   //   return '/login'
   // }
 
-  // // 2. 已登录用户访问登录/注册页，自动跳首页
   // if (publicPaths.includes(to.path) && token) {
   //   return '/projects'
   // }
 
-  // // 3. 需要管理员权限的路由
   // if (to.meta.requiresAdmin) {
-  //   const userInfoStr = localStorage.getItem('user_info')
-  //   if (!userInfoStr) {
-  //     // 用户信息缺失，重新登录
+  //   const userStr = localStorage.getItem('user_info')
+  //   if (!userStr) {
   //     localStorage.removeItem('access_token')
   //     return '/login'
   //   }
-
   //   try {
-  //     const user = JSON.parse(userInfoStr)
-  //     // 根据你的接口，字段是 level，值如 "超级管理员"
-  //     if (user.level !== '超级管理员' && user.level !== '管理员') {
-  //       ElMessage.warning('无权限访问')
+  //     const user = JSON.parse(userStr)
+  //     if (!['超级管理员', '管理员'].includes(user.level)) {
   //       return '/projects'
   //     }
   //   } catch (e) {
-  //     console.error('用户信息解析失败', e)
   //     localStorage.removeItem('access_token')
   //     localStorage.removeItem('user_info')
   //     return '/login'

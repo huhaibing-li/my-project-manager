@@ -3,18 +3,11 @@
   <div class="project-list-container">
     <h2 class="page-title">项目总览</h2>
 
-    <!-- 顶部操作栏 -->
-    <div class="action-bar">
-      <div></div>
-      <div>
-        <el-button type="primary" icon="Plus" @click="goToCreate">新建</el-button>
-        <el-button type="success" icon="Download" @click="exportExcel">导出</el-button>
-      </div>
-    </div>
+
 
     <!-- 筛选表单 -->
-    <el-form :model="filters" size="small" label-width="100px" class="filter-form">
-      <el-row :gutter="16">
+    <el-form :model="filters" label-width="100px" class="filter-form">
+      <el-row :gutter="24">
         <el-col :span="6">
           <el-form-item label="项目编号">
             <el-input v-model="filters.projectCode" clearable placeholder="请输入" />
@@ -72,14 +65,27 @@
       </el-form-item>
     </el-form>
 
+    <!-- 顶部操作栏 -->
+    <div class="action-bar">
+      <div></div>
+      <div>
+        <el-button type="primary" @click="goToCreate">
+          <template #icon>
+            <Plus />
+          </template>
+          新建
+        </el-button>
+
+        <el-button type="success" @click="exportExcel">
+          <template #icon>
+            <Download />
+          </template>
+          导出
+        </el-button>
+      </div>
+    </div>
     <!-- 项目表格 -->
-    <el-table
-      :data="tableData"
-      border
-      v-loading="loading"
-      style="width: 100%; margin-top: 20px"
-      max-height="600"
-    >
+    <el-table :data="tableData" border v-loading="loading" style="width: 100%; margin-top: 20px" max-height="600">
       <!-- 字段列 -->
       <el-table-column prop="projectCode" label="项目编号" width="120" fixed />
       <el-table-column prop="projectName" label="项目名称" min-width="150" />
@@ -136,17 +142,33 @@
     </el-table>
 
     <!-- 分页 -->
-    <el-pagination
-      v-if="total > 0"
-      v-model:current-page="currentPage"
-      v-model:page-size="pageSize"
-      :total="total"
-      layout="total, sizes, prev, pager, next, jumper"
-      :page-sizes="[10, 20, 50]"
-      style="margin-top: 20px; text-align: right"
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-    />
+    <el-pagination v-if="total > 0" v-model:current-page="currentPage" v-model:page-size="pageSize" :total="total"
+      layout="total, sizes, prev, pager, next, jumper" :page-sizes="[10, 20, 50]"
+      style="margin-top: 20px; text-align: right" @size-change="handleSizeChange"
+      @current-change="handleCurrentChange" />
+
+    <el-dialog v-model="dialogFormVisible" title="Shipping address" width="500">
+      <el-form :model="form">
+        <el-form-item label="Promotion name" :label-width="formLabelWidth">
+          <el-input v-model="form.name" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="Zones" :label-width="formLabelWidth">
+          <el-select v-model="form.region" placeholder="Please select a zone">
+            <el-option label="Zone No.1" value="shanghai" />
+            <el-option label="Zone No.2" value="beijing" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogFormVisible = false">Cancel</el-button>
+          <el-button type="primary" @click="dialogFormVisible = false">
+            Confirm
+            .3
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -154,6 +176,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import * as XLSX from 'xlsx'
+import { Plus, Download } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -330,23 +353,30 @@ onMounted(fetchProjects)
 
 <style scoped>
 .project-list-container {
-  padding: 20px;
+  /* padding: 20px; */
 }
+
 .page-title {
   font-size: 24px;
   color: #333;
   margin-bottom: 20px;
 }
+
 .action-bar {
   display: flex;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   align-items: center;
   margin-bottom: 20px;
 }
+
 .filter-form {
   background-color: #f9f9f9;
   padding: 16px;
   border-radius: 6px;
   margin-bottom: 20px;
+}
+
+.el-pagination {
+  float: right;
 }
 </style>
